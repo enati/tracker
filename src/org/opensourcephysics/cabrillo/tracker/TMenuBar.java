@@ -132,6 +132,8 @@ public class TMenuBar extends JMenuBar implements PropertyChangeListener {
   protected JMenu cloneMenu; // Tracks/Clone
   protected JMenu measuringToolsMenu;
   protected Component[] newTrackItems;
+  // Agrego el limite hasta donde busco la semilla
+  protected JMenuItem newTrackLimitItem;
   protected JMenuItem newPointMassItem;
   protected JMenuItem newCMItem;
   protected JMenuItem newVectorItem;
@@ -718,6 +720,7 @@ public class TMenuBar extends JMenuBar implements PropertyChangeListener {
 		
     // create new track menu
     createMenu = new JMenu(TrackerRes.getString("TMenuBar.MenuItem.NewTrack")); //$NON-NLS-1$
+    newTrackLimitItem = new JMenuItem(actions.get("tl"));
     newPointMassItem = new JMenuItem(actions.get("pointMass")); //$NON-NLS-1$
     newCMItem = new JMenuItem(actions.get("cm")); //$NON-NLS-1$
     newVectorItem = new JMenuItem(actions.get("vector")); //$NON-NLS-1$
@@ -1687,6 +1690,8 @@ public class TMenuBar extends JMenuBar implements PropertyChangeListener {
         editMenu.add(configItem);
         // refresh new tracks menu
         createMenu.removeAll();
+        createMenu.add(newTrackLimitItem);
+        createMenu.addSeparator();
         if (trackerPanel.isEnabled("new.pointMass") || //$NON-NLS-1$
             trackerPanel.isEnabled("new.cm")) { //$NON-NLS-1$
           if (trackerPanel.isEnabled("new.pointMass")) createMenu.add(newPointMassItem); //$NON-NLS-1$
