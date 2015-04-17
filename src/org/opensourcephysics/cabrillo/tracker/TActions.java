@@ -29,11 +29,14 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.net.URL;
 
 import javax.swing.*;
 
+import org.opensourcephysics.cabrillo.tracker.AutoTracker.Corner;
 import org.opensourcephysics.controls.*;
 import org.opensourcephysics.media.core.*;
 import org.opensourcephysics.tools.FontSizer;
@@ -373,6 +376,13 @@ public class TActions {
       }
     };
     actions.put("exit", exitAction); //$NON-NLS-1$
+    // new track limit 
+    AbstractAction tlAction = new AbstractAction(TrackerRes.getString("TrackLimit.Name"), null) { //$NON-NLS-1$
+      public void actionPerformed(ActionEvent e) {
+    	  Rectangle2D auxRect = new Rectangle2D.Double();
+      }
+    };
+    actions.put("tl", tlAction); //$NON-NLS-1$
     // new point mass
     AbstractAction pointMassAction = new AbstractAction(TrackerRes.getString("PointMass.Name"), null) { //$NON-NLS-1$
       public void actionPerformed(ActionEvent e) {
@@ -381,7 +391,7 @@ public class TActions {
         trackerPanel.addTrack(pointMass);
         trackerPanel.setSelectedPoint(null);
         trackerPanel.setSelectedTrack(pointMass);
-        trackerPanel.getPlayer().setStepNumber(0);
+        //trackerPanel.getPlayer().setStepNumber(0);
         // offer to add new mass if single cm exists
         ArrayList<CenterOfMass> list = trackerPanel.getDrawables(CenterOfMass.class);
         if (list.size() == 1) {
