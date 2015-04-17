@@ -101,6 +101,8 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   }
 
   // instance fields
+  private int contador=0;
+  private boolean outOfRange = false;
   private TrackerPanel trackerPanel;
   private TTrack track;
   private Wizard wizard;
@@ -114,6 +116,7 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   private TPoint searchCenter = new TPoint(); 
   private TPoint predictedTarget = new TPoint();
   private Rectangle2D searchRect2D = new Rectangle2D.Double();
+  public Rectangle2D auxRect = new Rectangle2D.Double();
   private Shape searchShape, maskShape, matchShape;
   private Shape searchHitShape, maskHitShape;
   private Mark mark; // draws the mask, target and/or search area
@@ -145,9 +148,9 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   	trackerPanel.addPropertyChangeListener("selectedtrack", this); //$NON-NLS-1$
   	trackerPanel.addPropertyChangeListener("video", this); //$NON-NLS-1$
   	trackerPanel.addPropertyChangeListener("stepnumber", this); //$NON-NLS-1$
-    stepper = new Runnable() {
+  	stepper = new Runnable() {
       public void run() {
-      	if (!active || track==null) {
+    	if (!active || track==null) {
       		return;
       	}
   	    if (markCurrentFrame(true)) { 
@@ -157,6 +160,26 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   	    		return;
   	    	}
     	    if (stepping) { // move to the next step
+    	    	//Agregado para mover el rectangulo de lugar para buscar una nueva semilla
+    	      	TPoint p = findMatchTarget(false);
+    	      	System.out.println("target: "+p);
+    	      	if (p.x>195 && !outOfRange) {
+    	      		outOfRange=true;
+    	      		TPoint p2 = new TPoint (21.5, 68.85123367198835);
+    	      		wizard.startButton.doClick();
+    	      		setSearchPoints(new TPoint (21.5, 68.85123367198835), new TPoint (43.0, 87.35123367198835));
+    	      		wizard.startButton.doClick();
+    	      		wizard.acceptButton.doClick();
+    	      		return;
+	      		}
+    	      	else if (outOfRange) {
+    	      		outOfRange=false;
+    	      		//TMenuBar menuBar = TMenuBar.getMenuBar(trackerPanel);
+    	      		//menuBar.newPointMassItem.doClick();
+    	      		//addKeyFrame(p, p.x, p.y);
+    	      		wizard.startButton.doClick();   
+    	      		wizard.startButton.doClick();  
+    	      	}
     	    	wizard.refreshInfo();
     	    	repaint();
     	    	trackerPanel.getPlayer().step();
@@ -166,11 +189,15 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
     	    stop(true, true);
   	    }
   	    else { // failed to find or mark a match, so pause or stop
-  	    	if (!stepping)
+  	    	if (outOfRange) {
+	    			wizard.skipButton.doClick();
+	    			return;
+	    		}
+  	    	if (!stepping) 
   	    		stop(true, false);
   	    	else {
 	  	    	paused = true;
-	  	  		if (track instanceof PointMass) {
+	  	    	if (track instanceof PointMass) {
 	  	  			PointMass pointMass = (PointMass)track;
 	  	  			pointMass.updateDerivatives();
 	  	  		}
@@ -661,14 +688,16 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
    */
   public void refreshSearchRect() {
   	// set searchRect according to current search center and corner
-  	searchRect2D.setFrameFromCenter(searchCenter, searchCorner);
-  	// move searchRect into the video image if needed
+	searchRect2D.setFrameFromCenter(searchCenter, searchCorner);
+	//System.out.println(searchCenter+"  "+searchCorner);
+	//System.out.println(searchRect2D);
+	// move searchRect into the video image if needed
   	if (moveRectIntoImage(searchRect2D)) { // true if moved
   		// set search center and corner locations to reflect new searchRect
   		searchCenter.setLocation(searchRect2D.getCenterX(), searchRect2D.getCenterY());
   		searchCorner.setLocation(searchRect2D.getMaxX(), searchRect2D.getMaxY());
   	}
-  	
+
   	// save the search points in the current frame
   	int n = trackerPanel.getFrameNumber();
 		FrameData frame = getFrame(n);
@@ -676,7 +705,7 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   	frame.setSearchPoints(pts);
 		repaint();
   }
-
+  
   /**
    * Sets the position of the center and corner of the search rectangle.
    * If the corner is null, the search rectangle is moved but not resized,
@@ -691,7 +720,7 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
     	BufferedImage image = trackerPanel.getVideo().getImage();
     	int w = image.getWidth();
     	int h = image.getHeight();
-  		int setbackX = searchRect2D.getBounds().width/2;
+    	int setbackX = searchRect2D.getBounds().width/2;
   		int setbackY = searchRect2D.getBounds().height/2;
   		center.x = Math.max(center.x, setbackX);
   		center.x = Math.min(center.x, w-setbackX);
@@ -722,8 +751,8 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
 	public void propertyChange(PropertyChangeEvent e) {
 		String name = e.getPropertyName();
 		int n = trackerPanel.getFrameNumber();
-    FrameData frame = getFrame(n);
-  	KeyFrame keyFrame = frame.getKeyFrame();
+		FrameData frame = getFrame(n);
+		KeyFrame keyFrame = frame.getKeyFrame();
   	
 		if (name.equals("selectedpoint")) { //$NON-NLS-1$
 			boolean needsRepaint = false;
@@ -818,19 +847,23 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
 				TPoint prediction = getPredictedMatchTarget(n);
 	  		if (prediction != null) {
 	  			setSearchPoints(getMatchCenter(prediction), null);
-	  	  	// save search center and corner points
-	  	  	TPoint[] pts = new TPoint[] {new TPoint(searchCenter), new TPoint(searchCorner)};
-	      	frame.setSearchPoints(pts);
+		  	  	// save search center and corner points
+		  	  	TPoint[] pts = new TPoint[] {new TPoint(searchCenter), new TPoint(searchCorner)};
+		  	  	frame.setSearchPoints(pts);
 	  		}
 	  		else {
 	  			repaint();
 	  		}
-			}
+	  		
+		}
+		else if (name.equals("prueba")) { //$NON-NLS-1$
+			System.out.println("hola");
+		}
 			if (active && !paused) { // actively tracking
-	      if (SwingUtilities.isEventDispatchThread())
-	      	stepper.run();
-	      else
-	      	SwingUtilities.invokeLater(stepper);
+				if (SwingUtilities.isEventDispatchThread())
+					stepper.run();
+				else
+					SwingUtilities.invokeLater(stepper);
 			}
 			else if (stepping) { // user set the frame number, so stop stepping
 				stop(true, false);
