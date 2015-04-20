@@ -26,9 +26,15 @@ package org.opensourcephysics.cabrillo.tracker;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
+import java.util.Map;
+
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 
+import org.opensourcephysics.cabrillo.tracker.AutoTracker.FrameData;
+import org.opensourcephysics.cabrillo.tracker.AutoTracker.KeyFrame;
+import org.opensourcephysics.cabrillo.tracker.AutoTracker.Target;
 import org.opensourcephysics.display.*;
 import org.opensourcephysics.media.core.*;
 
@@ -48,7 +54,7 @@ public class TMouseHandler implements InteractiveMouseHandler {
   Interactive iad = null;
   TPoint p = null;
   boolean stepCreated = false, autoTracked = false;
-  boolean marking;
+  boolean marking, settingLimit;
   TTrack selectedTrack;
   int frameNumber;
   Point mousePtRelativeToViewRect = new Point(); // starting position of mouse
@@ -151,6 +157,10 @@ public class TMouseHandler implements InteractiveMouseHandler {
         marking = selectedTrack!=null 
         		&& trackerPanel.getCursor()==selectedTrack.getMarkingCursor(e);
         AutoTracker.KeyFrame keyFrame = getActiveKeyFrame(autoTracker);
+        settingLimit = autoTracker.auxRect!=null;
+        if (settingLimit && isLimitTrigger(e)) {
+        	
+        }
         if (marking) {
         	iad = null;
         	boolean autoTrigger = isAutoTrackTrigger(e);
@@ -209,7 +219,6 @@ public class TMouseHandler implements InteractiveMouseHandler {
           		trackerPanel.getMouseX(), trackerPanel.getMouseY());
     	  		TTrackBar.getTrackbar(trackerPanel).refresh();
           }
-          
           if (step!=null && !isAutoTrackTrigger(e)) {
             trackerPanel.setMouseCursor(Cursor.getPredefinedCursor(Cursor.
                 HAND_CURSOR));
@@ -391,6 +400,11 @@ public class TMouseHandler implements InteractiveMouseHandler {
         }
     }
   }
+  
+  protected static boolean isLimitTrigger(InputEvent e) {
+	  	if (e.isShiftDown()) return true;
+	  	return false;
+	  }
   
   protected static boolean isAutoTrackTrigger(InputEvent e) {
   	if (e.isControlDown()) return true;

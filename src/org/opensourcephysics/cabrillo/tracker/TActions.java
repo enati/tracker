@@ -379,7 +379,8 @@ public class TActions {
     // new track limit 
     AbstractAction tlAction = new AbstractAction(TrackerRes.getString("TrackLimit.Name"), null) { //$NON-NLS-1$
       public void actionPerformed(ActionEvent e) {
-    	  Rectangle2D auxRect = new Rectangle2D.Double();
+    	  Rectangle2D aux = new Rectangle2D.Double(100,100,50,50);
+    	  trackerPanel.autoTracker.setAuxRect(aux); 	  
       }
     };
     actions.put("tl", tlAction); //$NON-NLS-1$

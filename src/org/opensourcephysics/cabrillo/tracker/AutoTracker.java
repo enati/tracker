@@ -556,6 +556,13 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
   }
 
   /**
+   * Sets the auxiliar search rectangle
+   */
+  public void setAuxRect(Rectangle2D rectangle) {
+  	auxRect = rectangle;
+  }
+  
+  /**
    * Draws this object.
    *
    * @param panel the drawing panel requesting the drawing
@@ -2030,7 +2037,6 @@ public class AutoTracker implements Interactive, Trackable, PropertyChangeListen
     		refreshGUI();
     	}
     }
-
     
     /**
      * Overrides JDialog setVisible method.
